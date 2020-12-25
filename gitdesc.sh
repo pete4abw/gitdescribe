@@ -18,7 +18,7 @@ all - entire git describe
 commit - commit, omitting v
 tagrev - tag revision count
 major - major release version
-ninor - minor release version
+minor - minor release version
 micro - micro release version
 version - M.m.c
 -r -- get release tag only
