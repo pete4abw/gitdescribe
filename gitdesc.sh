@@ -1,6 +1,6 @@
 #?bin/sh
 # Peter Hyman, pete@peterhyman.com
-# December 2020
+# December 2020, April 2021
 # Free to use
 # No warranties
 # Attribution appreciated as well as enhancements or fixes!
@@ -77,47 +77,58 @@ commit_length=7
 
 init() {
 	local realtag
-	# git describe raw format
-	describe_tag=$(git describe $tagopt --long --abbrev=$commit_length)
+	if [ -d '.git' ] ; then
+		# git describe raw format
+		describe_tag=$(git describe $tagopt --long --abbrev=$commit_length)
 
-	# grab real tag version in case we need it for git-show
-	realtag=$(echo $describe_tag | cut -d- -f1)
+		# grab real tag version in case we need it for git-show
+		realtag=$(echo $describe_tag | cut -d- -f1)
 
-	# if tag has a leading `v' this will remove
-	# if some other tag format is used, change or omit
-	describe_tag=${describe_tag/v/}
+		# if tag has a leading `v' this will remove
+		# if some other tag format is used, change or omit
+		describe_tag=${describe_tag/v/}
 
-	# git describe prefixes commit with the letter `g'
-	# this substitution removes the g. If the letter `g' is part of tag, this logic
-	# will need revision, such as reversing $describe_tag and then reverting
-	# echo $describe | rev, for example, and get variables right to left
-	describe_tag=${describe_tag/g/}
+		# git describe prefixes commit with the letter `g'
+		# this substitution removes the g. If the letter `g' is part of tag, this logic
+		# will need revision, such as reversing $describe_tag and then reverting
+		# echo $describe | rev, for example, and get variables right to left
+		describe_tag=${describe_tag/g/}
 
-	# assign commit, tag revision, and version to variables using `-' separator
-	commit=$(echo $describe_tag | cut -d- -f3)
-	tagrev=$(echo $describe_tag | cut -d- -f2)
-	version=$(echo $describe_tag | cut -d- -f1)
+		# assign commit, tag revision, and version to variables using `-' separator
+		commit=$(echo $describe_tag | cut -d- -f3)
+		tagrev=$(echo $describe_tag | cut -d- -f2)
+		version=$(echo $describe_tag | cut -d- -f1)
 
-	# if tag date is needed
-	# alter date format per strftime formats
-	# YYYY-mm-dd
-	tagdate=$(git show -n1 -s --date=format:"%Y-%m-%d" --format="%cd" $realtag)
+		# if tag date is needed
+		# alter date format per strftime formats
+		# YYYY-mm-dd
+		tagdate=$(git show -n1 -s --date=format:"%Y-%m-%d" --format="%cd" $realtag)
 
-	# (Other examples)
-	# dd mmm YYYY
-	# tagdate=$(git show -n1 -s --date=format:"%d %b %Y" --format="%cd" $version)
-	# dd MMMMMMM YYYY
-	# tagdate=$(git show -n1 -s --date=format:"%d %B %Y" --format="%cd" $version)
+		# (Other examples)
+		# dd mmm YYYY
+		# tagdate=$(git show -n1 -s --date=format:"%d %b %Y" --format="%cd" $version)
+		# dd MMMMMMM YYYY
+		# tagdate=$(git show -n1 -s --date=format:"%d %B %Y" --format="%cd" $version)
 
-	# set micro version or full micro version if tag revision > 0
-	micro=$(echo $version | cut -d. -f3)
-	[ $tagrev -gt 0 ] && micro=$micro-$tagrev-$commit
+		# set micro version or full micro version if tag revision > 0
+		micro=$(echo $version | cut -d. -f3)
+		[ $tagrev -gt 0 ] && micro=$micro-$tagrev-$commit
 
-	# assign minor version
-	minor=$(echo $version | cut -d. -f2)
+		# assign minor version
+		minor=$(echo $version | cut -d. -f2)
 
-	# assign major version
-	major=$(echo $version | cut -d. -f1)
+		# assign major version
+		major=$(echo $version | cut -d. -f1)
+	elif [ -r VERSION ] ; then
+		# if no .git directory, then look for a file named VERSION
+		major=$(awk '/Major: / {printf "%s",$2; exit}' VERSION)
+		minor=$(awk '/Minor: / {printf "%s",$2; exit}' VERSION)
+		micro=$(awk '/Micro: / {printf "%s",$2; exit}' VERSION)
+	else
+		# if no .git directory and no file VERSION, then we can't go on
+		echo "Cannot find .git or VERSION file. Aborting"
+		exit 1
+	fi
 }
 
 [ ! $(which git) ] && die "Something very wrong: git not found."
