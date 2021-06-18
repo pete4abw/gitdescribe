@@ -101,7 +101,7 @@ m4_define([v_ver], [v_maj.v_min.v_mic])
 [The Advanced Bash Scripting
 Guide](https://tldp.org/LDP/abs/html/refcards.html#AEN22828), and in
 particular table **B-5** (linked here) has every trick you may need to
-taylor gitdesc.sh to your needs.
+tailor gitdesc.sh to your needs.
 
 ## Thanks
 Inspiration for this program came from Thomas Adam,of the [fvwm3
